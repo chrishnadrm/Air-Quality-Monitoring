@@ -1,6 +1,6 @@
 {
-  "name": "Weather Station Monitoring",
-  "description": "Dashboard Monitoring Cuaca Realtime ESP32 & Google Sheets - Light Mode Modern UI",
+  "name": "Air Quality Station Monitoring",
+  "description": "Dashboard monitoring kualitas udara",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

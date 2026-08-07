@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { WeatherData, ChartTabType } from './types';
 import {
   fetchWeatherStationData,
@@ -9,7 +9,6 @@ import {
 import { Header } from './components/Header';
 import { GaugeCard } from './components/GaugeCard';
 import { COGaugeCard } from './components/COGaugeCard';
-import { StatsOverview } from './components/StatsOverview';
 import { ChartSection } from './components/ChartSection';
 import { DataTable } from './components/DataTable';
 import { UrlSettingsModal } from './components/UrlSettingsModal';
@@ -19,6 +18,19 @@ import { InstallPwaModal } from './components/InstallPwaModal';
 import { Thermometer, Droplets, Gauge as GaugeIcon, ThermometerSun, AlertCircle, ExternalLink, Code } from 'lucide-react';
 
 export default function App() {
+  // Theme State
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    return localStorage.getItem('ws_theme') === 'dark';
+  });
+
+  const toggleTheme = () => {
+    setIsDark(prev => {
+      const next = !prev;
+      localStorage.setItem('ws_theme', next ? 'dark' : 'light');
+      return next;
+    });
+  };
+
   // Config & URL State
   const [scriptUrl, setScriptUrl] = useState<string>(() => {
     return localStorage.getItem('ws_script_url') || DEFAULT_SCRIPT_URL;
@@ -33,6 +45,10 @@ export default function App() {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [useMockData, setUseMockData] = useState<boolean>(false);
   const [fetchErrorMsg, setFetchErrorMsg] = useState<string | null>(null);
+
+  // Connection tracking ref (tracks last time new data was received)
+  const lastDataTimeRef = useRef<string | null>(null);
+  const lastDataChangeTimestampRef = useRef<number>(Date.now());
 
   // Tab & Modal States
   const [activeChartTab, setActiveChartTab] = useState<ChartTabType>('all');
@@ -93,7 +109,7 @@ export default function App() {
     if (isManual) setIsRefreshing(true);
 
     if (useMockData) {
-      // Mock Mode
+      // Mock Mode - always actively generating data
       const mockRes = generateMockData();
       setHistoryData(mockRes.history);
       setLatestData(mockRes.latest);
@@ -107,25 +123,44 @@ export default function App() {
 
     try {
       const res = await fetchWeatherStationData(scriptUrl);
-      if (res && res.status === 'success') {
+      if (res && res.status === 'success' && res.latest) {
         setHistoryData(res.history || []);
-        setLatestData(res.latest || null);
+        setLatestData(res.latest);
         setTotalRows(res.totalRows || 0);
-        setIsConnected(true);
+
+        // Check if data is new or stagnant
+        const newTime = res.latest.time;
+        const now = Date.now();
+
+        if (newTime !== lastDataTimeRef.current) {
+          lastDataTimeRef.current = newTime;
+          lastDataChangeTimestampRef.current = now;
+          setIsConnected(true);
+        } else {
+          // If the timestamp hasn't changed for more than 15 seconds, mark as disconnected
+          if (now - lastDataChangeTimestampRef.current > 15000) {
+            setIsConnected(false);
+          } else {
+            setIsConnected(true);
+          }
+        }
+
         setLastUpdate(new Date().toLocaleTimeString('id-ID'));
         setFetchErrorMsg(null);
       } else if (res && res.status === 'empty') {
         setHistoryData([]);
         setLatestData(null);
         setTotalRows(0);
-        setIsConnected(true);
+        setIsConnected(false);
         setLastUpdate(new Date().toLocaleTimeString('id-ID'));
         setFetchErrorMsg(null);
+      } else {
+        setIsConnected(false);
       }
     } catch (err: any) {
       console.warn('Gagal mengambil data dari Google Sheet API:', err);
       setIsConnected(false);
-      setFetchErrorMsg('Gagal terhubung ke Google Sheet API (Kemungkinan CORS restriction / Script URL belum dapat diakses). Menggunakan mode simulasi fallback.');
+      setFetchErrorMsg('Gagal terhubung ke Google Sheet API. Menggunakan mode simulasi fallback.');
       
       // Auto fallback to mock data on initial load if remote fetch blocked
       if (historyData.length === 0) {
@@ -178,7 +213,9 @@ export default function App() {
   const coVal = latestData ? latestData.co : 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 pb-16 selection:bg-blue-500 selection:text-white">
+    <div className={`min-h-screen transition-colors duration-300 pb-16 selection:bg-blue-500 selection:text-white ${
+      isDark ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-800'
+    }`}>
       
       {/* HEADER NAVBAR */}
       <Header
@@ -194,6 +231,8 @@ export default function App() {
         onOpenInstallModal={() => setIsInstallModalOpen(true)}
         useMockData={useMockData}
         onToggleMockMode={() => setUseMockData(!useMockData)}
+        isDark={isDark}
+        onToggleTheme={toggleTheme}
       />
 
       {/* MAIN CONTAINER */}
@@ -201,13 +240,17 @@ export default function App() {
 
         {/* CORS / Connection Error Notice Banner */}
         {fetchErrorMsg && !useMockData && (
-          <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 shadow-2xs">
+          <div className={`border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs ${
+            isDark 
+              ? 'bg-amber-950/40 border-amber-800/80 text-amber-200' 
+              : 'bg-amber-50 border-amber-200/80 text-amber-900'
+          }`}>
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-              <div className="text-xs space-y-1">
+              <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div className="space-y-1">
                 <p className="font-bold">Info Koneksi Google Apps Script:</p>
-                <p className="text-amber-800 leading-relaxed">
-                  Web App Script URL saat ini: <code className="bg-amber-100 px-1 py-0.5 rounded font-mono text-[11px]">{scriptUrl}</code>.
+                <p className={`leading-relaxed ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>
+                  Web App Script URL saat ini: <code className={`px-1 py-0.5 rounded font-mono text-[11px] ${isDark ? 'bg-amber-900/60' : 'bg-amber-100'}`}>{scriptUrl}</code>.
                   Jika browser memblokir request lintas domain (CORS), Anda dapat beralih ke <strong>Simulasi Mode</strong> atau membuka spreadsheet langsung.
                 </p>
               </div>
@@ -223,7 +266,7 @@ export default function App() {
                 href={scriptUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="p-1.5 text-amber-700 hover:bg-amber-100 rounded-xl"
+                className={`p-1.5 rounded-xl ${isDark ? 'text-amber-300 hover:bg-amber-900/60' : 'text-amber-700 hover:bg-amber-100'}`}
                 title="Buka Endpoint Google Sheet di Tab Baru"
               >
                 <ExternalLink className="w-4 h-4" />
@@ -238,103 +281,103 @@ export default function App() {
           {/* 1. GAUGE SUHU DHT22 */}
           <GaugeCard
             title="SUHU DHT22"
-            subtitle="Sensor Suhu Air DHT"
             value={tempVal}
             unit="°C"
             decimals={2}
             icon={Thermometer}
             strokeColor="#f59e0b"
-            badgeBg="bg-amber-50"
-            iconColor="text-amber-600"
+            badgeBg={isDark ? "bg-amber-950/60" : "bg-amber-50"}
+            iconColor="text-amber-500"
             gaugePercent={tempVal / 50}
-            trendText="Rentang: 0 - 50°C"
+            isDark={isDark}
           />
 
           {/* 2. GAUGE KELEMBABAN */}
           <GaugeCard
             title="KELEMBABAN"
-            subtitle="Sensor Kelembaban Udara"
             value={humVal}
             unit="% RH"
             decimals={2}
             icon={Droplets}
             strokeColor="#3b82f6"
-            badgeBg="bg-blue-50"
-            iconColor="text-blue-600"
+            badgeBg={isDark ? "bg-blue-950/60" : "bg-blue-50"}
+            iconColor="text-blue-500"
             gaugePercent={humVal / 100}
-            trendText="Rentang: 0 - 100%"
+            isDark={isDark}
           />
 
           {/* 3. GAUGE TEKANAN UDARA */}
           <GaugeCard
             title="TEKANAN UDARA"
-            subtitle="Barometer BMP"
             value={pressVal}
             unit="hPa"
             decimals={2}
             icon={GaugeIcon}
             strokeColor="#10b981"
-            badgeBg="bg-emerald-50"
-            iconColor="text-emerald-600"
+            badgeBg={isDark ? "bg-emerald-950/60" : "bg-emerald-50"}
+            iconColor="text-emerald-500"
             gaugePercent={(pressVal - 900) / 200}
-            trendText="Rentang: 900 - 1100 hPa"
+            isDark={isDark}
           />
 
-          {/* 4. GAUGE SUHU BMP (Replacing Altitude Parameter) */}
+          {/* 4. GAUGE SUHU BMP */}
           <GaugeCard
             title="SUHU BMP"
-            subtitle="Sensor Suhu Barometer BMP"
             value={bmpTempVal}
             unit="°C"
             decimals={2}
             icon={ThermometerSun}
             strokeColor="#6366f1"
-            badgeBg="bg-indigo-50"
-            iconColor="text-indigo-600"
+            badgeBg={isDark ? "bg-indigo-950/60" : "bg-indigo-50"}
+            iconColor="text-indigo-500"
             gaugePercent={bmpTempVal / 50}
-            trendText="Menggantikan Ketinggian"
+            isDark={isDark}
           />
 
           {/* 5. GAUGE GAS CO WITH SAFETY STATUS */}
-          <COGaugeCard coValue={coVal} />
+          <COGaugeCard coValue={coVal} isDark={isDark} />
 
         </section>
-
-        {/* STATISTICAL SUMMARY OVERVIEW */}
-        <StatsOverview history={historyData} latest={latestData} />
 
         {/* APEXCHARTS HISTORICAL TREND SECTION */}
         <ChartSection
           history={historyData}
           activeTab={activeChartTab}
           onTabChange={setActiveChartTab}
+          isDark={isDark}
         />
 
         {/* RECENT SENSOR DATA TABLE */}
-        <DataTable history={historyData} />
+        <DataTable history={historyData} isDark={isDark} />
 
         {/* SCRIPT INFORMATION BANNER FOOTER */}
-        <footer className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        <footer className={`rounded-2xl p-5 border shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4 text-xs transition-colors ${
+          isDark ? 'bg-slate-800/90 border-slate-700/80 text-slate-400' : 'bg-white border-slate-200/90 text-slate-500'
+        }`}>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+            <div className="p-2 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 rounded-xl">
               <Code className="w-4 h-4" />
             </div>
             <div>
-              <p className="font-bold text-slate-800">Sistem Monitoring Cuaca Realtime ESP32 & Google Sheets</p>
-              <p className="text-slate-500 text-[11px]">Dikembangkan dengan Frontend React Modern, Tailwind Light Theme, & Google Apps Script Database.</p>
+              <p className={`font-bold ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>Air Quality Station Monitoring</p>
+              <p className="text-[11px]">Dikembangkan dengan Frontend React Modern, Tailwind CSS, & Google Sheets Database.</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsCodeModalOpen(true)}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all"
+              className={`px-3 py-1.5 font-semibold rounded-xl transition-all ${
+                isDark ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
             >
               Lihat Kode Script (kode.gs)
             </button>
             <button
               onClick={() => setIsSettingsModalOpen(true)}
-              className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold rounded-xl transition-all"
+              className={`px-3 py-1.5 font-semibold rounded-xl transition-all ${
+                isDark ? 'bg-blue-950/80 hover:bg-blue-900 text-blue-300' : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
+              }`}
             >
               Pengaturan URL
             </button>
@@ -374,3 +417,4 @@ export default function App() {
     </div>
   );
 }
+

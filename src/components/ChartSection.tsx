@@ -7,12 +7,14 @@ interface ChartSectionProps {
   history: WeatherData[];
   activeTab: ChartTabType;
   onTabChange: (tab: ChartTabType) => void;
+  isDark?: boolean;
 }
 
 export const ChartSection: React.FC<ChartSectionProps> = ({
   history,
   activeTab,
-  onTabChange
+  onTabChange,
+  isDark = false
 }) => {
   const categories = useMemo(() => {
     return history.map(d => d.time);
@@ -86,12 +88,12 @@ export const ChartSection: React.FC<ChartSectionProps> = ({
         }
       }
     },
-    theme: { mode: 'light' },
+    theme: { mode: isDark ? 'dark' : 'light' },
     stroke: { curve: 'smooth', width: 2.5 },
     fill: {
       type: 'gradient',
       gradient: {
-        shade: 'light',
+        shade: isDark ? 'dark' : 'light',
         type: 'vertical',
         opacityFrom: 0.35,
         opacityTo: 0.03,
@@ -101,24 +103,24 @@ export const ChartSection: React.FC<ChartSectionProps> = ({
     xaxis: {
       categories: categories,
       labels: {
-        style: { colors: '#64748b', fontSize: '11px', fontWeight: 500 }
+        style: { colors: isDark ? '#94a3b8' : '#64748b', fontSize: '11px', fontWeight: 500 }
       },
-      axisBorder: { color: '#e2e8f0' },
-      axisTicks: { color: '#e2e8f0' }
+      axisBorder: { color: isDark ? '#334155' : '#e2e8f0' },
+      axisTicks: { color: isDark ? '#334155' : '#e2e8f0' }
     },
     yaxis: {
       labels: {
-        style: { colors: '#64748b', fontSize: '11px', fontWeight: 500 },
+        style: { colors: isDark ? '#94a3b8' : '#64748b', fontSize: '11px', fontWeight: 500 },
         formatter: (val: number) => (typeof val === 'number' ? val.toFixed(2) : '')
       }
     },
     grid: {
-      borderColor: '#f1f5f9',
+      borderColor: isDark ? '#334155' : '#f1f5f9',
       strokeDashArray: 4
     },
     colors: colors,
     tooltip: {
-      theme: 'light',
+      theme: isDark ? 'dark' : 'light',
       style: { fontSize: '12px', fontFamily: 'Plus Jakarta Sans' },
       x: { show: true },
       y: {
@@ -131,10 +133,10 @@ export const ChartSection: React.FC<ChartSectionProps> = ({
       horizontalAlign: 'right',
       fontSize: '12px',
       fontFamily: 'Plus Jakarta Sans',
-      labels: { colors: '#334155' },
+      labels: { colors: isDark ? '#cbd5e1' : '#334155' },
       markers: { size: 6 }
     }
-  }), [categories, colors]);
+  }), [categories, colors, isDark]);
 
   const tabs: { id: ChartTabType; label: string }[] = [
     { id: 'all', label: 'Semua Parameter' },
@@ -146,22 +148,28 @@ export const ChartSection: React.FC<ChartSectionProps> = ({
   ];
 
   return (
-    <div className="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-sm w-full">
+    <div className={`rounded-2xl p-6 border w-full transition-colors ${
+      isDark ? 'bg-slate-800/90 border-slate-700/80 shadow-md' : 'bg-white border-slate-200/90 shadow-xs'
+    }`}>
       
       {/* Header Toolbar & Tabs */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+      <div className={`flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 pb-4 border-b ${
+        isDark ? 'border-slate-700/60' : 'border-slate-100'
+      }`}>
         <div>
-          <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-            <LineChart className="w-5 h-5 text-blue-600" />
+          <h2 className={`text-lg font-extrabold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            <LineChart className="w-5 h-5 text-blue-500" />
             Grafik Histori Parameter Sensor
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5 font-medium">
+          <p className={`text-xs mt-0.5 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Pantau tren perubahan suhu, kelembaban, tekanan, suhu BMP, dan CO secara realtime
           </p>
         </div>
 
         {/* Parameter Filter Tabs */}
-        <div className="flex flex-wrap items-center gap-1 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200/60 text-xs font-semibold">
+        <div className={`flex flex-wrap items-center gap-1 p-1.5 rounded-xl border text-xs font-semibold ${
+          isDark ? 'bg-slate-900/80 border-slate-700' : 'bg-slate-100/80 border-slate-200/60'
+        }`}>
           <span className="hidden sm:inline-flex items-center gap-1 text-slate-400 px-2">
             <Filter className="w-3.5 h-3.5" />
           </span>
@@ -174,7 +182,7 @@ export const ChartSection: React.FC<ChartSectionProps> = ({
                 className={`px-3 py-1.5 rounded-lg transition-all ${
                   isActive
                     ? 'bg-blue-600 text-white shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    : (isDark ? 'text-slate-300 hover:text-white hover:bg-slate-800' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60')
                 }`}
               >
                 {t.label}
