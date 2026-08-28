@@ -15,7 +15,7 @@ import { UrlSettingsModal } from './components/UrlSettingsModal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { AppsScriptCodeModal } from './components/AppsScriptCodeModal';
 import { InstallPwaModal } from './components/InstallPwaModal';
-import { Thermometer, Droplets, Gauge as GaugeIcon, ThermometerSun, AlertCircle, ExternalLink, Code } from 'lucide-react';
+import { Thermometer, Droplets, Gauge as GaugeIcon, ThermometerSun, AlertCircle, ExternalLink } from 'lucide-react';
 
 export default function App() {
   // Theme State
@@ -349,41 +349,7 @@ export default function App() {
 
         {/* RECENT SENSOR DATA TABLE */}
         <DataTable history={historyData} isDark={isDark} />
-
-        {/* SCRIPT INFORMATION BANNER FOOTER */}
-        <footer className={`rounded-2xl p-5 border shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4 text-xs transition-colors ${
-          isDark ? 'bg-slate-800/90 border-slate-700/80 text-slate-400' : 'bg-white border-slate-200/90 text-slate-500'
-        }`}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 rounded-xl">
-              <Code className="w-4 h-4" />
-            </div>
-            <div>
-              <p className={`font-bold ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>Air Quality Station Monitoring</p>
-              <p className="text-[11px]">Dikembangkan dengan Frontend React Modern, Tailwind CSS, & Google Sheets Database.</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsCodeModalOpen(true)}
-              className={`px-3 py-1.5 font-semibold rounded-xl transition-all ${
-                isDark ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-              }`}
-            >
-              Lihat Kode Script (kode.gs)
-            </button>
-            <button
-              onClick={() => setIsSettingsModalOpen(true)}
-              className={`px-3 py-1.5 font-semibold rounded-xl transition-all ${
-                isDark ? 'bg-blue-950/80 hover:bg-blue-900 text-blue-300' : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
-              }`}
-            >
-              Pengaturan URL
-            </button>
-          </div>
-        </footer>
-
+        
       </main>
 
       {/* MODALS */}
