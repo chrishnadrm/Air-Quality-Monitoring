@@ -14,7 +14,6 @@ export const AppsScriptCodeModal: React.FC<AppsScriptCodeModalProps> = ({ isOpen
   const scriptCode = `// ==========================================================
 // BACKEND GOOGLE APPS SCRIPT - WEATHER STATION MONITORING
 // PARAMETER: Suhu DHT, Kelembaban, Tekanan, Suhu BMP, CO
-// (Parameter Altitude telah digantikan dengan Suhu BMP)
 // ==========================================================
 
 function doGet(e) {
