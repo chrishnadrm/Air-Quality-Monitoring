@@ -14,7 +14,7 @@ import { DataTable } from './components/DataTable';
 import { UrlSettingsModal } from './components/UrlSettingsModal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { InstallPwaModal } from './components/InstallPwaModal';
-import { Thermometer, Droplets, Gauge as GaugeIcon, ThermometerSun, AlertCircle, ExternalLink, Code } from 'lucide-react';
+import { Thermometer, Droplets, Gauge as GaugeIcon, ThermometerSun, AlertCircle, ExternalLink, } from 'lucide-react';
 
 export default function App() {
   // Theme State
