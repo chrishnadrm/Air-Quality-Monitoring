@@ -13,7 +13,6 @@ import { ChartSection } from './components/ChartSection';
 import { DataTable } from './components/DataTable';
 import { UrlSettingsModal } from './components/UrlSettingsModal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
-import { AppsScriptCodeModal } from './components/AppsScriptCodeModal';
 import { InstallPwaModal } from './components/InstallPwaModal';
 import { Thermometer, Droplets, Gauge as GaugeIcon, ThermometerSun, AlertCircle, ExternalLink, Code } from 'lucide-react';
 
@@ -54,7 +53,6 @@ export default function App() {
   const [activeChartTab, setActiveChartTab] = useState<ChartTabType>('all');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
-  const [isCodeModalOpen, setIsCodeModalOpen] = useState<boolean>(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
@@ -227,7 +225,6 @@ export default function App() {
         onRefreshManual={() => loadData(true)}
         onOpenDeleteModal={() => setIsDeleteModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
-        onOpenCodeModal={() => setIsCodeModalOpen(true)}
         onOpenInstallModal={() => setIsInstallModalOpen(true)}
         useMockData={useMockData}
         onToggleMockMode={() => setUseMockData(!useMockData)}
@@ -366,11 +363,6 @@ export default function App() {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleExecuteDelete}
         isDeleting={isDeleting}
-      />
-
-      <AppsScriptCodeModal
-        isOpen={isCodeModalOpen}
-        onClose={() => setIsCodeModalOpen(false)}
       />
 
       <InstallPwaModal
