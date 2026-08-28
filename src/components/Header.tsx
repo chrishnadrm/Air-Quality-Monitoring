@@ -197,19 +197,6 @@ export const Header: React.FC<HeaderProps> = ({
               <Settings className="w-3.5 h-3.5" />
               <span>URL API</span>
             </button>
-
-            <button
-              onClick={onOpenCodeModal}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-semibold transition-all ${
-                isDark
-                  ? 'bg-indigo-950/60 hover:bg-indigo-900/80 text-indigo-300 border-indigo-800'
-                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
-              }`}
-              title="Lihat Kode Google Apps Script (kode.gs)"
-            >
-              <Code className="w-3.5 h-3.5" />
-              <span>Kode GS</span>
-            </button>
           </div>
 
           {/* Install PWA App Button */}
