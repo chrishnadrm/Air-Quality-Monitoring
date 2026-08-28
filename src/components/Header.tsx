@@ -1,5 +1,5 @@
 import React from 'react';
-import { CloudSun, Clock, Database, Trash2, Settings, Code, RefreshCw, CheckCircle2, AlertCircle, Smartphone, Sun, Moon } from 'lucide-react';
+import { CloudSun, Clock, Database, Trash2, Settings, RefreshCw, CheckCircle2, AlertCircle, Smartphone, Sun, Moon } from 'lucide-react';
 
 interface HeaderProps {
   isConnected: boolean;
@@ -10,7 +10,6 @@ interface HeaderProps {
   onRefreshManual: () => void;
   onOpenDeleteModal: () => void;
   onOpenSettingsModal: () => void;
-  onOpenCodeModal: () => void;
   onOpenInstallModal: () => void;
   useMockData: boolean;
   onToggleMockMode: () => void;
@@ -26,7 +25,6 @@ export const Header: React.FC<HeaderProps> = ({
   onRefreshManual,
   onOpenDeleteModal,
   onOpenSettingsModal,
-  onOpenCodeModal,
   onOpenInstallModal,
   useMockData,
   onToggleMockMode,
